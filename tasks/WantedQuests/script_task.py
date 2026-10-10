@@ -62,11 +62,11 @@ class ScriptTask(WQExplore, SecretScriptTask, WantedQuestsAssets):
                 break
             if self.appear(self.I_WQ_BOX):
                 logger.info("get reward")
-                self.ui_get_reward(self.I_WQ_BOX)
+                self.ui_get_reward(self.I_WQ_BOX, reward_image=self.I_UI_REWARDNEW)
                 continue
             if self.appear(self.I_E_REWARD_BOX_BIG):
                 logger.info("get treasure")
-                self.ui_get_reward(self.I_E_REWARD_BOX_BIG)
+                self.ui_get_reward(self.I_E_REWARD_BOX_BIG, reward_image=self.I_UI_REWARDNEW)
                 continue
             current, found, total, self.O_WQ_TEXT_ALL.area = self.find_wq(
                 self.device.image,

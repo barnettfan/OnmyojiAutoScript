@@ -697,39 +697,45 @@ class BaseTask(GlobalGameAssets, CostumeBase):
     #  ---------------------------------------------------------------------------------------------------------------
     #
     #  ---------------------------------------------------------------------------------------------------------------
-    def ui_reward_appear_click(self, screenshot=False) -> bool:
+    def ui_reward_appear_click(self, screenshot=False, reward_image=None) -> bool:
         """
         如果出现 ‘获得奖励’ 就点击
+        :param reward_image: 自定义的'获得奖励'识别图，默认使用通用 I_UI_REWARD
         :return:
         """
         if screenshot:
             self.screenshot()
-        return self.appear_then_click(self.I_UI_REWARD, action=self.C_UI_REWARD, interval=0.4, threshold=0.6)
+        if reward_image is None:
+            reward_image = self.I_UI_REWARD
+        return self.appear_then_click(reward_image, action=self.C_UI_REWARD, interval=0.4, threshold=0.6)
 
-    def ui_get_reward(self, click_image: RuleImage | RuleOcr | RuleClick, click_interval: float = 1):
+    def ui_get_reward(self, click_image: RuleImage | RuleOcr | RuleClick, click_interval: float = 1, reward_image=None):
         """
         传进来一个点击图片 或是 一个ocr， 会点击这个图片，然后等待‘获得奖励’，
         最后当获得奖励消失后 退出
         :param click_interval:
         :param click_image:
+        :param reward_image: 自定义的'获得奖励'识别图，默认使用通用 I_UI_REWARD
         :return:
         """
+        if reward_image is None:
+            reward_image = self.I_UI_REWARD
         _timer = Timer(10)
         _timer.start()
         while 1:
             self.screenshot()
 
-            if self.ui_reward_appear_click():
+            if self.ui_reward_appear_click(reward_image=reward_image):
                 sleep(0.5)
                 while 1:
                     self.screenshot()
                     # 等待动画结束
-                    if not self.appear(self.I_UI_REWARD, threshold=0.6):
+                    if not self.appear(reward_image, threshold=0.6):
                         logger.info('Get reward success')
                         break
 
                     # 一直点击
-                    if self.ui_reward_appear_click():
+                    if self.ui_reward_appear_click(reward_image=reward_image):
                         continue
                 break
             if _timer.reached():
