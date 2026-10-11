@@ -36,6 +36,7 @@ class ScriptTask(GameUi, ReplaceShikigami, KekkaiUtilizeAssets):
     utilize_current_group_has_eligible_card = False
     utilize_current_group_scan_completed = False
     utilize_lazy_mode_active = False
+    utilize_placed_successfully = False
     ap_max_num = 0
     jade_max_num = 0
     utilize_threshold_filtered = False
@@ -66,6 +67,7 @@ class ScriptTask(GameUi, ReplaceShikigami, KekkaiUtilizeAssets):
         self.utilize_current_group_has_eligible_card = False
         self.utilize_current_group_scan_completed = False
         self.utilize_lazy_mode_active = False
+        self.utilize_placed_successfully = False
         self.ap_max_num = 0
         self.jade_max_num = 0
         self.utilize_threshold_filtered = False
@@ -113,6 +115,25 @@ class ScriptTask(GameUi, ReplaceShikigami, KekkaiUtilizeAssets):
             logger.info(f'第[{i}]次收取寮奖励: {ret}')
             self.goto_page(page_main)
 
+    def _notify_utilize_success(self, next_time: datetime) -> None:
+        """在本轮成功寄养后，发送已实际写入的下次执行时间。"""
+        con = self.config.kekkai_utilize.utilize_config
+        if not self.utilize_placed_successfully or not con.utilize_success_notify:
+            return
+
+        notifier = self.config.notifier
+        if (
+            not notifier.enable
+            or not getattr(notifier, 'provider_name', None)
+            or not getattr(notifier, 'notifier', None)
+        ):
+            logger.info('未配置可用的消息推送，跳过寄养成功通知')
+            return
+
+        content = f'寄养成功，下次寄养时间{next_time:%Y-%m-%d %H:%M:%S}'
+        logger.info(f'发送寄养成功通知: {content}')
+        notifier.push(title='寄养成功', content=content)
+
     def check_utilize_add(self):
         con = self.config.kekkai_utilize.utilize_config
         while 1:
@@ -152,6 +173,7 @@ class ScriptTask(GameUi, ReplaceShikigami, KekkaiUtilizeAssets):
                 if min_interval and min_interval.total_seconds() > 0:
                     next_time = max(next_time, datetime.now() + min_interval)
                 self.set_next_run(task='KekkaiUtilize', target=next_time)
+                self._notify_utilize_success(next_time)
                 return True
             if not self.goto_page(page_guild_realm_utilize):
                 logger.info('Utilize failed, exit')
@@ -653,6 +675,7 @@ class ScriptTask(GameUi, ReplaceShikigami, KekkaiUtilizeAssets):
             )
         self.utilize_failed_count = 0
         self.utilize_entered_failed_count = 0
+        self.utilize_placed_successfully = True
         return True
 
     def _lazy_card_matches_rule(

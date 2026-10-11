@@ -6,6 +6,8 @@
   "save_ocr_log": "Save OCR recognition logs",
   "save_ocr_log_help": "Disabled by default. When enabled, saves OCR input images and recognized text for debugging.",
   "utilize_harvest": "Collect foster rewards",
+  "utilize_success_notify": "Foster completion notification",
+  "utilize_success_notify_help": "Send the next foster time after a successful foster. Requires an enabled and configured notification provider.",
   "quick_loadout_config": "Quick Loadout",
   "boss_quick_loadout_config": "Boss Quick Loadout",
   "quick_loadout_enable_help": "Equip preset souls and deploy the preset from the in-battle quick loadout panel; skips the legacy soul switch and battle preset, then applies the team-lock state from general battle settings",

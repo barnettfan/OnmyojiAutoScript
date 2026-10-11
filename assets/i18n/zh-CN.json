@@ -156,6 +156,8 @@
   "auto_fill": "智能放入",
   "auto_fill_help": "开启后使用智能放入寄养式神",
   "utilize_harvest": "领取寄养收获",
+  "utilize_success_notify": "寄养完成通知",
+  "utilize_success_notify_help": "开启后，寄养成功时发送下次寄养时间通知；需先在消息推送中配置并启用推送渠道。",
   "honor_gift": "功勋礼包",
   "guild_banquet_config": "寮宴会配置",
   "auto_switch_shikigami": "自动切换式神",

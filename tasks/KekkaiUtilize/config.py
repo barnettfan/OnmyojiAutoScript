@@ -38,6 +38,7 @@ class UtilizeConfig(BaseModel):
     harvest_guild_max_times: int = Field(default=2, description='harvest_guild_max_times_help')
     utilize_harvest: bool = Field(default=True, description='utilize_harvest_help')
     utilize_enable: bool = Field(default=True, description='utilize_enable_help')
+    utilize_success_notify: bool = Field(default=False, description='utilize_success_notify_help')
     lazy_mode: bool = Field(default=False, description='lazy_mode_help')
     lazy_mode_weight: float = Field(
         default=1.0,
