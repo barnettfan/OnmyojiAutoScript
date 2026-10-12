@@ -121,18 +121,18 @@ class ScriptTask(GameUi, ReplaceShikigami, KekkaiUtilizeAssets):
         if not self.utilize_placed_successfully or not con.utilize_success_notify:
             return
 
-        notifier = self.config.notifier
-        if (
-            not notifier.enable
-            or not getattr(notifier, 'provider_name', None)
-            or not getattr(notifier, 'notifier', None)
-        ):
-            logger.info('未配置可用的消息推送，跳过寄养成功通知')
-            return
+        # notifier = self.config.notifier
+        # if (
+        #     not notifier.enable
+        #     or not getattr(notifier, 'provider_name', None)
+        #     or not getattr(notifier, 'notifier', None)
+        # ):
+        #     logger.info('未配置可用的消息推送，跳过寄养成功通知')
+        #     return
 
         content = f'寄养成功，下次寄养时间{next_time:%Y-%m-%d %H:%M:%S}'
         logger.info(f'发送寄养成功通知: {content}')
-        notifier.push(title='寄养成功', content=content)
+        self.config.notifier.push(title='寄养成功', content=content)
 
     def check_utilize_add(self):
         con = self.config.kekkai_utilize.utilize_config
