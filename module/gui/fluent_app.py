@@ -3,11 +3,25 @@
 # github https://github.com/runhey
 import sys
 import os
+import ctypes
+from pathlib import Path
+
+import PySide6
+
+# 保持目录句柄存活，让 Windows 在加载 FluentUI 原生 QML 插件时能找到 PySide6 携带的 Qt DLL。
+_QT_DLL_DIRECTORY_HANDLES = []
+if os.name == "nt":
+    _QT_DLL_DIRECTORY_HANDLES.append(
+        os.add_dll_directory(os.fspath(Path(PySide6.__file__).resolve().parent))
+    )
+    # QML 插件加载器不会继承 Python 的 DLL 搜索路径，先加载 FluentUI 运行库及插件。
+    _FLUENTUI_PLUGIN_DIR = Path(__file__).resolve().parent / "FluentUI"
+    ctypes.WinDLL(os.fspath(_FLUENTUI_PLUGIN_DIR / "fluentui.dll"))
+    ctypes.WinDLL(os.fspath(_FLUENTUI_PLUGIN_DIR / "fluentuiplugin.dll"))
 
 from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine, qmlRegisterType
 from PySide6.QtCore import Qt, QObject, QTranslator, QLocale, Slot
-from pathlib import Path
 
 from module.gui.utils import get_work_path
 from module.gui.Bridge import bridge
@@ -49,7 +63,9 @@ class FluentApp():
     def run(cls):
         FluentApp.engine.load(os.fspath(Path(get_work_path() / 'module' / 'gui' / 'qml' / 'app.qml')))
         if not FluentApp.engine.rootObjects():
+            logger.error('Failed to load GUI root QML')
             sys.exit(-1)
+        logger.info('GUI root QML loaded')
         sys.exit(FluentApp.app.exec())
 
     @classmethod
@@ -124,6 +140,3 @@ class DpiScale(QObject):
             case "ceil": QGuiApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.Ceil)  # 始终缩放
             case "round_prefer_floor": QGuiApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.RoundPreferFloor)  # 设备像素比0.75及以上的，进行缩放
             case _: QGuiApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
-
-
-

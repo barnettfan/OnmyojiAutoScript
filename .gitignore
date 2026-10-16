@@ -276,3 +276,6 @@ console.bat
 tasks/AutoCheckinBigGod/frida-server-17.6.2-android-x86_64
 oas.bat
 /data/frog_oas/
+module/gui/fluent_app.py
+module/gui/FluentUI/fluentui.dll
+module/gui/fluent_app.py
