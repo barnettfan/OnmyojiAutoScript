@@ -548,6 +548,8 @@ mode_3策略是刷到五个契灵后开始结契，选择高级、中级盘来�
 	<message><source>Guild Assets Enable</source><translation>顺路收取寮资金</translation></message>
 	<message><source>Box Ap Enable</source><translation>顺路收取体力盒子</translation></message>
 	<message><source>Box Exp Enable</source><translation>顺路收取经验盒子</translation></message>
+	<message><source>Utilize Success Notify</source><translation>寄养完成通知</translation></message>
+	<message><source>utilize_success_notify_help</source><translation>开启后，寄养成功时发送下次寄养时间通知；需先在消息推送中配置并启用推送渠道。</translation></message>
 	<message><source>Lazy Mode</source><translation>怠惰模式</translation></message>
 	<message><source>lazy_mode_help</source><translation>开启后每次任务按权重随机进入怠惰模式；命中时不比较奖励数值，优先选择当前可见的五星及以上目标卡，否则选择首个符合策略的四星卡。</translation></message>
 	<message><source>Lazy Mode Weight</source><translation>怠惰模式权重</translation></message>

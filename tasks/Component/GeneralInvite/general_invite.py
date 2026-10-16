@@ -660,6 +660,7 @@ class GeneralInvite(BaseTask, GeneralInviteAssets):
                     if self.appear(self.I_I_DEFAULT):
                         break
                     if self.appear_then_click(self.I_I_NO_DEFAULT, interval=1):
+                        sleep(0.8)  # 取自 runhey#1886：点击后等 UI 状态刷新，避免误判
                         continue
         # 点击确认
         while 1:

@@ -133,6 +133,8 @@ class WantedQuestsAssets:
 	I_WQ_TRACE_ONE_REALWORLD = RuleImage(profile="High", roi_front=(850,470,180,180), roi_back=(850,470,180,180), threshold=0.8, method="Template matching", file="./tasks/WantedQuests/wq/wq_trace_one_realworld.png")
 	# 探索界面,左侧任务列表右上角右下角标志 
 	I_WQ_LIST_TOP_BOTTOM_CHECK = RuleImage(profile="High", roi_front=(120,125,25,425), roi_back=(120,125,25,425), threshold=0.8, method="Template matching", file="./tasks/WantedQuests/wq/wq_list_top_bottom_check.png")
+	# 悬赏封印获得奖励（取自 runhey#1892：悬赏的奖励弹窗与通用 I_UI_REWARD 不同型）
+	I_UI_REWARDNEW = RuleImage(profile="High", roi_front=(523,248,239,24), roi_back=(500,225,285,70), threshold=0.7, method="Template matching", file="./tasks/WantedQuests/wq/ui_rewardnew.png")
 
 
 	# Ocr Rule Assets

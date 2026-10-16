@@ -310,6 +310,7 @@
       "harvest_guild_max_times": 2,
       "utilize_harvest": true,
       "utilize_enable": true,
+      "utilize_success_notify": false,
       "guild_ap_enable": true,
       "guild_assets_enable": true,
       "box_ap_enable": true,
