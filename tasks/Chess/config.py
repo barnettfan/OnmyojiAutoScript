@@ -1,6 +1,6 @@
 # This Python file uses the following encoding: utf-8
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from tasks.Component.config_base import ConfigBase, Time
 from tasks.Component.config_scheduler import Scheduler
@@ -10,11 +10,25 @@ from tasks.Chess.strategy.lineup import LineupBond
 class ChessConfig(ConfigBase):
     """百鬼棋局循环与结束条件。"""
 
+    hyakki_draft_enabled: bool = Field(
+        title='百鬼投掷试行', default=True,
+        description='本人锁消失四秒后投掷，优先阵容所需御魂，否则随机选择。',
+    )
+
     lineup_bond: LineupBond = Field(
         title='选择阵容羁绊',
-        default=LineupBond.ARAKAWA,
+        default=LineupBond.QIJIAOSHAN,
         description='选择阵容羁绊。',
     )
+
+    @field_validator('lineup_bond', mode='before')
+    @classmethod
+    def migrate_removed_lineup(cls, value):
+        raw = getattr(value, 'value', value)
+        if raw in {'流火', '冥府', '大江山', '狐妖', '荒川',
+                   'liuhuo', 'mingfu', 'dajiangshan', 'huyao', 'arakawa'}:
+            return LineupBond.QIJIAOSHAN
+        return value
 
     rank_protection: bool = Field(
         title='保段位',
