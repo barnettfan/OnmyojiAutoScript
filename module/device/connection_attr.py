@@ -9,7 +9,7 @@ from adbutils import AdbClient, AdbDevice
 
 from module.base.decorator import cached_property
 from module.config.config import Config
-from module.config.utils import deep_iter
+from module.config.utils import deep_iter, desktop_mode_enabled
 from module.exception import RequestHumanTakeover
 from module.logger import logger
 
@@ -60,8 +60,9 @@ class ConnectionAttr:
                 if 'eri' in k[0].split('_')[-1]:
                     print(k, v)
                     su.__setattr__(k[0], chr(8) + v)
-        # Cache adb_client
-        _ = self.adb_client
+        # 桌面客户端通过 Windows 窗口控制，不需要启动或连接 ADB server。
+        if not self.is_desktop:
+            _ = self.adb_client
 
         # Parse custom serial
         # self.serial = str(self.config.Emulator_Serial)
@@ -126,6 +127,11 @@ class ConnectionAttr:
     @cached_property
     def is_emulator(self):
         return self.serial.startswith('emulator-') or self.serial.startswith('127.0.0.1:')
+
+    @cached_property
+    def is_desktop(self):
+        """Whether this Device controls the native Windows desktop client."""
+        return desktop_mode_enabled(self.config)
 
     @cached_property
     def is_network_device(self):

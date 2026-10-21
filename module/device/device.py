@@ -14,6 +14,7 @@ from module.base.timer import Timer
 from module.config.utils import get_server_next_update
 from module.device.app_control import AppControl
 from module.device.control import Control
+from module.device.desktop_device import DesktopDevice
 from module.device.platform2 import Platform
 from module.device.screenshot import Screenshot
 from module.exception import (GameNotRunningError,
@@ -24,7 +25,7 @@ from module.exception import (GameNotRunningError,
 from module.logger import logger
 
 
-class Device(Platform, Screenshot, Control, AppControl):
+class Device(DesktopDevice, Platform, Screenshot, Control, AppControl):
     _screen_size_checked = False
     detect_record = set()
     click_record = deque(maxlen=15)
@@ -38,6 +39,12 @@ class Device(Platform, Screenshot, Control, AppControl):
                 super().__init__(*args, **kwargs)
                 break
             except EmulatorNotRunningError:
+                # 桌面客户端没有模拟器可拉；窗口不存在时直接启动/认领它再重建句柄链。
+                if self.is_desktop:
+                    if trial >= 1 or not self._desktop_ensure_launched():
+                        logger.critical('Desktop client not found and auto-launch failed')
+                        raise RequestHumanTakeover from None
+                    continue
                 if trial >= 3:
                     logger.critical('Failed to start emulator after 3 trial')
                     raise RequestHumanTakeover
@@ -50,6 +57,11 @@ class Device(Platform, Screenshot, Control, AppControl):
                         f'please set a correct serial'
                     )
                     raise RequestHumanTakeover
+
+        # 桌面客户端没有模拟器生命周期或 ADB 截图基准。
+        if self.is_desktop:
+            self._init_desktop()
+            return
 
         # Auto-fill emulator info
         if IS_WINDOWS and self.config.script.device.emulatorinfo_type == 'auto':
@@ -130,6 +142,10 @@ class Device(Platform, Screenshot, Control, AppControl):
         Returns:
             np.ndarray:
         """
+        # 避免向已销毁的 HWND 截图；Restart 会负责重新拉起桌面客户端。
+        if self.is_desktop and not self.desktop_window_exists():
+            raise GameNotRunningError('Desktop client window not found')
+
         self.stuck_record_check()
 
         try:
@@ -256,6 +272,11 @@ class Device(Platform, Screenshot, Control, AppControl):
         self.stuck_record_check = empty_function
 
     def app_start(self):
+        if self.is_desktop:
+            if not self._desktop_ensure_launched():
+                raise GameNotRunningError('Desktop client auto-launch failed')
+            self.desktop_window_set_size()
+            return
         if not self.config.script.error.handle_error:
             logger.critical('No app stop/start, because HandleError disabled')
             logger.critical('Please enable Alas.Error.HandleError or manually login to AzurLane')
@@ -265,6 +286,10 @@ class Device(Platform, Screenshot, Control, AppControl):
         self.click_record_clear()
 
     def app_stop(self):
+        if self.is_desktop:
+            if not self.desktop_stop_client():
+                logger.warning('Desktop client not released, residual process may remain')
+            return
         if not self.config.script.error.handle_error:
             logger.critical('No app stop/start, because HandleError disabled')
             logger.critical('Please enable Alas.Error.HandleError or manually login to AzurLane')
@@ -283,6 +308,12 @@ class Device(Platform, Screenshot, Control, AppControl):
             timeout: 最大等待秒数。
             interval: 每轮探测的间隔秒数。
         """
+        # 登录前桌面客户端不属于“running”，等待包名前台状态会白等完整超时。
+        if self.is_desktop:
+            if not self.desktop_window_exists():
+                raise GameNotRunningError('Desktop client window not found after start')
+            return
+
         deadline = time.time() + timeout
         screenshot_method = self.screenshot_methods.get(
             self.config.script.device.screenshot_method,

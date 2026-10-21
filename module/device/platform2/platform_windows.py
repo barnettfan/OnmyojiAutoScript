@@ -772,6 +772,9 @@ class PlatformWindows(PlatformBase, EmulatorManager):
         return False
 
     def emulator_stop(self):
+        # “关闭模拟器”空闲策略在桌面模式下等价于关闭桌面客户端。
+        if getattr(self, 'is_desktop', False):
+            return self.desktop_stop_client()
         logger.hr('Emulator stop', level=1)
         max_attempts = 3
         for i in range(max_attempts):

@@ -707,6 +707,11 @@ class GameUi(ChessBattleNavigationMixin, BaseTask, GameUiAssets):
         """
 
         self.maybe_screenshot(skip_first_screenshot)
+
+        # MPay 是独立顶层窗口，主窗口截图中的页面特征已不可信，交 Restart 登录恢复。
+        if self.device.app_lost_login():
+            raise GameNotRunningError('Desktop client dropped back to login')
+
         logger.warning("Try switch to a supported page")
         for action in [*self.navigator.local_unknown_closers, *self.DEFAULT_UNKNOWN_CLOSERS]:
             action_name = self._action_name(action)

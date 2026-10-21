@@ -95,6 +95,11 @@ class Connection(ConnectionAttr):
             config (AzurLaneConfig, str): Name of the user config under ./config
         """
         super().__init__(config)
+        # 桌面客户端没有 ADB 设备；保留 package 仅用于日志和通用错误信息。
+        if self.is_desktop:
+            self.package = self.config.script.device.package_name.value
+            logger.attr('PackageName', self.package)
+            return
         if not self.is_over_http:
             self.detect_device()
 
@@ -748,6 +753,11 @@ class Connection(ConnectionAttr):
                 2: 'HOME key on the top'
                 3: 'HOME key on the left'
         """
+        # 桌面客户端窗口固定按横屏资产控制，不能调用 adb dumpsys。
+        if self.is_desktop:
+            self.orientation = 0
+            return 0
+
         _DISPLAY_RE = re.compile(
             r'.*DisplayViewport{.*valid=true, .*orientation=(?P<orientation>\d+), .*deviceWidth=(?P<width>\d+), deviceHeight=(?P<height>\d+).*'
         )

@@ -177,6 +177,9 @@ class ScriptRuntimeController:
         仅用于关闭模拟器相关策略，避免在“模拟器本来就关闭”的情况下，
         因为访问 `self.device` 而触发 `Device` 初始化，反而把模拟器先拉起来。
         """
+        # 桌面模式没有模拟器实例，不能用 ADB 探测结果覆盖其运行状态。
+        if self.config.script.desktop.enable:
+            return
         if self.emulator_down or 'device' in self.script.__dict__:
             return
 
@@ -325,6 +328,12 @@ class ScriptRuntimeController:
         wait_decision = self._wait_for_server_update_window(f'task `{task}` preparation')
         if wait_decision is not ScriptRuntimeDecision.READY:
             return wait_decision
+
+        if self.config.script.desktop.enable:
+            if not self.device.app_is_running():
+                return self._run_restart_recovery(
+                    f'Desktop client is not logged in before task `{task}`, recover it via Restart')
+            return ScriptRuntimeDecision.READY
 
         self._ensure_emulator_running('Wake emulator before running task')
 

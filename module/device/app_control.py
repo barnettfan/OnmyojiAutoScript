@@ -3,6 +3,7 @@ from lxml import etree
 from module.device.method.adb import Adb
 from module.device.method.uiautomator_2 import Uiautomator2
 from module.device.method.utils import HierarchyButton
+from module.exception import RequestHumanTakeover
 # from module.device.method.wsa import WSA
 from module.logger import logger
 
@@ -17,6 +18,10 @@ class AppControl(Adb, Uiautomator2):
 
         这用于区分“应用被切到后台”和“应用已经被真正杀掉”两种情况。
         """
+        if self.is_desktop:
+            from module.device.method.desktop_impl import desktop_pid_alive
+            return desktop_pid_alive(self.desktop_pid())
+
         if not package_name:
             package_name = self.package
 
@@ -31,6 +36,9 @@ class AppControl(Adb, Uiautomator2):
         return bool(result)
 
     def app_is_running(self) -> bool:
+        # 自动拉起的桌面客户端会先停在 MPay 登录页，登录完成前不能开始任务。
+        if self.is_desktop:
+            return self.desktop_window_exists() and getattr(self, '_desktop_login_done', True)
         method = self.config.script.device.control_method
         # if self.is_wsa:
         #     package = self.app_current_wsa()
@@ -66,6 +74,10 @@ class AppControl(Adb, Uiautomator2):
         Returns:
             etree._Element: Select elements with `self.hierarchy.xpath('//*[@text="Hermit"]')` for example.
         """
+        # 桌面客户端没有 Android accessibility hierarchy; never silently fall back to ADB.
+        if self.is_desktop:
+            raise RequestHumanTakeover('Android UI hierarchy is unavailable in desktop client mode')
+
         method = self.config.script.device.screenshot_method
         if method in AppControl._app_u2_family:
             self.hierarchy = self.dump_hierarchy_uiautomator2()

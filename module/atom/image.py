@@ -14,6 +14,18 @@ from module.logger import logger
 from module.base.utils import is_approx_rectangle
 
 
+# 桌面客户端经 DPI 重采样后可能相对模板整体偏移约一个像素。
+# 仅由桌面 Device 启用；模拟器保持 0，不改变既有识别范围。
+ROI_MATCH_PAD = 0
+DESKTOP_ROI_MATCH_PAD = 2
+
+
+def set_roi_match_padding(pad: int) -> None:
+    """Set the per-side template search expansion in pixels."""
+    global ROI_MATCH_PAD
+    ROI_MATCH_PAD = max(0, int(pad))
+
+
 class RuleImage:
     debug_mode: bool = False
     METHOD_TEMPLATE_MATCH = "Template matching"
@@ -155,12 +167,18 @@ class RuleImage:
         :param roi
         :return:
         """
-        if roi is None:
-            x, y, w, h = self.roi_back
-        else:
-            x, y, w, h = roi
-        x, y, w, h = int(x), int(y), int(w), int(h)
+        x, y, w, h = self._pad_roi(self.roi_back if roi is None else roi)
         return image[y:y + h, x:x + w]
+
+    @staticmethod
+    def _pad_roi(roi) -> tuple[int, int, int, int]:
+        """Expand a search ROI while keeping its origin valid for NumPy slicing."""
+        x, y, w, h = [int(value) for value in roi]
+        if ROI_MATCH_PAD <= 0:
+            return x, y, w, h
+        x0 = max(0, x - ROI_MATCH_PAD)
+        y0 = max(0, y - ROI_MATCH_PAD)
+        return x0, y0, x + w + ROI_MATCH_PAD - x0, y + h + ROI_MATCH_PAD - y0
 
     def _template_image_invalid(self, mat: np.array) -> bool:
         if mat is None or mat.shape[0] == 0 or mat.shape[1] == 0:
@@ -170,8 +188,9 @@ class RuleImage:
         return False
 
     def _update_roi_front(self, loc: tuple[int, int], size: tuple[int, int]) -> None:
-        self.roi_front[0] = loc[0] + self.roi_back[0]
-        self.roi_front[1] = loc[1] + self.roi_back[1]
+        x0, y0, _, _ = self._pad_roi(self.roi_back)
+        self.roi_front[0] = loc[0] + x0
+        self.roi_front[1] = loc[1] + y0
         self.roi_front[2] = size[0]
         self.roi_front[3] = size[1]
 
@@ -192,6 +211,7 @@ class RuleImage:
             "scale_range": scale_range,
             "scale_step": float(self.scale_step),
             "grayscale": bool(getattr(self, 'grayscale', False)),
+            "roi_padding": ROI_MATCH_PAD,
         }
 
     def _apply_match_result(self, result: dict) -> bool:

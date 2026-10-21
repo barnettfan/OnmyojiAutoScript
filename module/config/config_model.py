@@ -451,6 +451,13 @@ class ConfigModel(ConfigBase):
         if isinstance(value, str) and value == 'false':
             value = False
 
+        # 桌面客户端“启动实例”是一次性动作：执行后必须写回 False，避免配置被保存成开关。
+        if (task == 'script' and group == 'desktop' and argument == 'launch_instance'
+                and value is True):
+            from module.device.method.desktop_impl import desktop_launch_instance
+            desktop_launch_instance(self)
+            value = False
+
         task_object = getattr(self, task, None)
         group_object = getattr(task_object, group, None)
         if group_object is None:  # deal list

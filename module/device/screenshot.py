@@ -169,7 +169,10 @@ class Screenshot(Adb, DroidCast, Scrcpy, Window, NemuIpc):
         """
         if interval is None:
             origin = self.config.script.optimization.screenshot_interval
-            interval = limit_in(origin, 0.1, 0.3)
+            if getattr(self, 'is_desktop', False):
+                interval = limit_in(origin, 0.05, 0.3)
+            else:
+                interval = limit_in(origin, 0.1, 0.3)
             if interval != origin:
                 logger.warning(f'Optimization.ScreenshotInterval {origin} is revised to {interval}')
                 self.config.script.optimization.screenshot_interval = interval
@@ -178,7 +181,10 @@ class Screenshot(Adb, DroidCast, Scrcpy, Window, NemuIpc):
                 interval = limit_in(origin, 0.1, 0.2)
         elif interval == 'combat':
             origin = self.config.script.optimization.combat_screenshot_interval
-            interval = limit_in(origin, 0.3, 1.0)
+            if getattr(self, 'is_desktop', False):
+                interval = limit_in(origin, 0.1, 1.0)
+            else:
+                interval = limit_in(origin, 0.3, 1.0)
             if interval != origin:
                 logger.warning(f'Optimization.CombatScreenshotInterval {origin} is revised to {interval}')
                 self.config.script.optimization.combat_screenshot_interval = interval

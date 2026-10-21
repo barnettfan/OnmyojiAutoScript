@@ -204,6 +204,11 @@ class Control(Minitouch, Adb, Scrcpy, Window):
         self.handle_control_check(name)
         p1, p2 = ensure_int(p1, p2)
         drag_log = 'Drag %s -> %s' % (point2str(*p1), point2str(*p2))
+        # 原生客户端没有 Android 的分段拖拽接口，统一使用窗口消息滑动。
+        if getattr(self, 'is_desktop', False):
+            self.swipe_window_message(p1, p2)
+            logger.info(f'{self._format_action_duration(0)}{drag_log}')
+            return
         method = self.config.script.emulator.control_method
         start = time.perf_counter()
         if method == 'minitouch':

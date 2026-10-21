@@ -156,5 +156,22 @@ class BezierTrajectory:
         # return {"trackArray": np.array(s), "P": w}
         return [[int(s[0]), int(s[1])] for s in s]
 
+
+def human_track(start, end, interval=10):
+    """Generate a non-empty, human-like pointer path shared by emulator and desktop input."""
+    number_list = int(math.dist(start, end) / interval)
+    if number_list < 1:
+        return [tuple(end)]
+    if start[0] == end[0]:
+        dy = end[1] - start[1]
+        return [[int(start[0]), int(start[1] + dy * i / number_list)]
+                for i in range(1, number_list + 1)]
+    curve_type = 3 if random.random() <= 0.8 else random.choice((1, 2))
+    return BezierTrajectory.trackArray(
+        start=list(start), end=list(end), numberList=number_list,
+        le=random.randint(2, 4), deviation=random.randint(20, 40),
+        bias=0.5, type=curve_type, cbb=0, yhh=20,
+    )
+
 # print(BezierTrajectory.trackArray(start=[0, 0], end=[100, 100], numberList=50, le=2,
 #                     deviation=0, bias=0.5, type=0, cbb=0, yhh=10))

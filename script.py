@@ -587,7 +587,8 @@ class Script:
         self._rest_until = None
 
         # Update GUI 防呆, 读取设置并立刻显示后台模拟器到前台
-        if not self.config.script.device.run_background_only and IS_WINDOWS:
+        if (not self.config.script.desktop.enable
+                and not self.config.script.device.run_background_only and IS_WINDOWS):
             from module.device.platform2.platform_windows import minimize_by_name, show_window_by_name
             target_window_name = self.config.script.device.handle  # 在这里输入你的具体窗口名称
             if self.config.script.device.emulator_window_minimize:

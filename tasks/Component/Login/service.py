@@ -10,6 +10,10 @@ from tasks.Restart.assets import RestartAssets
 from tasks.base_task import BaseTask
 
 
+# MPay 窗口会独立于游戏渲染窗口反复出现；超过该次数表示自动确认无效。
+DESKTOP_MPAY_CLOSE_LIMIT = 5
+
+
 class LoginService(
     ChessBattleNavigationMixin,
     BaseTask,
@@ -36,13 +40,33 @@ class LoginService(
         skip_login_animation = True
         login_success = False
         enter_game_fallback_used = False
+        popup_handled = 0
+
+        def handle_desktop_login_popup() -> bool:
+            """Confirm the desktop client's native MPay popup before image recognition."""
+            nonlocal popup_handled
+            if not self.device.is_desktop or not self.device.find_desktop_login_popup():
+                return False
+            popup_handled += 1
+            if popup_handled > DESKTOP_MPAY_CLOSE_LIMIT:
+                raise GameStuckError(
+                    f'Desktop MPay login popup reappeared more than {DESKTOP_MPAY_CLOSE_LIMIT} times')
+            if self.device.desktop_confirm_login_popup():
+                return True
+            if not self.device.find_desktop_login_popup():
+                return True
+            raise GameStuckError('Desktop MPay login popup cannot be closed')
 
         while 1:
+            if handle_desktop_login_popup():
+                continue
             if not login_success and orientation_timer.reached():
                 self.device.get_orientation()
                 orientation_timer.reset()
 
             self.screenshot()
+            if handle_desktop_login_popup():
+                continue
             if self.appear_then_click(
                 self.I_RETURN_CHESS_CANCEL,
                 interval=0.8,
@@ -170,6 +194,9 @@ class LoginService(
         self.device.click_record_clear()
         try:
             self._app_handle_login()
+            if self.device.is_desktop:
+                # app_is_running 在桌面模式下必须等登录流程真正完成后才返回 True。
+                self.device.desktop_mark_logged_in()
             return True
         except (GameTooManyClickError, GameStuckError) as e:
             logger.warning(e)
